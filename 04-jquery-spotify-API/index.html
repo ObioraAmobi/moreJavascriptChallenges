@@ -2,28 +2,219 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
+
 	<title>Spotify API App</title>
+
+	<link href='http://fonts.googleapis.com/css?family=Lato' rel='stylesheet'  type='text/css'>
+	<link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap.min.css">
 </head>
+
+<style>
+	body{
+		font-family: 'Lato', sans-serif;
+		text-align: center;
+		background-color: whitesmoke;
+	}
+	.page-header{
+		text-align: center;
+		color: green;
+	}	
+</style>
+
 <body>
-<!--<form>-->
-	<input>
-	<button>Search</button>
-<!--</form>-->
-	
+		<div class="container">
+
+			<div class="page-header row">
+				<div class="col-md-12">
+					<h1>Obi's <img style="max-width:100px; margin-top: -7px;"
+             src="img/logo.png"> App</h1>
+				</div>
+			</div>
+			
+			<div class="panel panel-primary">
+				<div class="panel-body">
+			    	Look For An Artist
+			  	</div>
+			  	<div class="panel-footer">
+					<input>
+					<button>Search</button>
+			  	</div>
+			</div>
+
+			<div class="panel panel-primary">
+				<div class="panel-body">
+			    	Artists Found
+			  	</div>
+			  	<div class="panel-footer">
+					<select id="artists"></select>
+			  	</div>
+			</div>
+
+			<div class="panel panel-primary">
+				<div class="panel-body">
+			    	Albums Found
+			  	</div>
+			  	<div class="panel-footer">
+					<select id="albums"></select>
+			  	</div>
+			</div>
+
+			<div class="panel panel-primary">
+				<div class="panel-body">
+			    	Tracks Found
+			  	</div>
+			  	<div class="panel-footer">
+					<select id="tracks"></select>
+			  	</div>
+			</div>
+
+			<div class="panel panel-primary">
+				<div class="panel-body">
+			    	Preview
+			  	</div>
+			  	<div class="panel-footer">
+					<div id="preview"></div>
+			  	</div>
+			</div>
+
+	</div>
+
+	<script src="bootstrap/js/bootstrap.min.js"></script>
 	<script src="https://code.jquery.com/jquery-2.2.0.js"></script>
 	<script>
 
-	var spotifyUrl = https://api.spotify.com 
+	$('#artists').hide();
 
-	var $myInput = $(form input);
-	$myInput = $myInput.val();
+	$("button").on("click", function(e) {
 
-	$.ajax({
+		e.preventDefault()
+		var $myInput = $("input");
+		var sArtistName = $myInput.val();
+
+		var spotifyUrl = "https://api.spotify.com/v1/search?type=artist&query=" + sArtistName
+		
+		$.ajax({
+	        url: spotifyUrl,
+			dataType: "json",
+	        success: function( oDataJson ) {
+
+	        	var aArtists = oDataJson.artists.items;
+	        	var nNumArtists = aArtists.length;
+	        	var sSearchedArtists = "<option value='default'>Please Choose Artist...</option>";
+	        	var oCurrentArtist;
+
+	        	for ( var i=0; i<nNumArtists; i++ ) {
+	        		oCurrentArtist = aArtists[i];
+	        		sSearchedArtists += "<option value='" + oCurrentArtist.id +"'>" + oCurrentArtist.name + "</option>";
+	        	};
+
+	        	$("#artists").html(sSearchedArtists)    
+				
+				$('#artists').show("slow");
+			}
 
 
-	})
 
-	// e.preventDefault()
+		})
+
+	});
+
+	$('#albums').hide();
+
+	$("#artists").on("change", function(e) {
+
+  		var $optionSelected = $(this).find("option:selected");
+  		var sNameArtist = $optionSelected.text();
+  		var sIdArtist = $optionSelected.val();
+
+		// this vs $(this)
+		// this 	=> DOM selection
+		// $(this)  => jQuery selection
+
+		/*
+		var nIndexOptionSelected = this.selectedIndex;
+		var aOptions = this.options;
+		var oSelectedOption = aOptions[nIndexOptionSelected];
+		var $selectedOption = $(oSelectedOption);
+		
+		console.log ( $selectedOption.val() );
+		console.log ( $selectedOption.text() );
+		*/
+
+  		var albumURL = "https://api.spotify.com/v1/artists/" + sIdArtist + "/albums"
+
+  		$.ajax({
+	        url: albumURL,
+			dataType: "json",
+	        success: function( oDataAlbumsJson ) {
+
+	        	var nNumAlbums = oDataAlbumsJson.items.length;
+	        	var aAlbums = oDataAlbumsJson.items;
+	        	var sSelectedArtistAlbums = "<option value='default'>Please Choose Album...</option>";
+
+	        	for (var i=0; i<nNumAlbums; i++) {
+	        		var oCurrentArtistAlbums = aAlbums[i];
+	        		sSelectedArtistAlbums += "<option value='" + oCurrentArtistAlbums.id +"'>" + oCurrentArtistAlbums.name + "</option>"
+	        	};
+
+	        	$("#albums").html(sSelectedArtistAlbums)
+
+	        	$('#albums').show("slow");
+	        	
+			}
+
+
+
+		})
+
+	});
+
+	$('#tracks').hide();
+
+	$("#albums").on("change",function(e) {
+
+		var $optionSelected = $(this).find("option:selected");
+  		var sNameAlbums = $optionSelected.text();
+  		var sIdAlbums = $optionSelected.val()
+
+  		var albumTracksURL = "https://api.spotify.com/v1/albums/" + sIdAlbums + "/tracks"
+
+  		$.ajax({
+	        url: albumTracksURL,
+			dataType: "json",
+	        success: function( oDataAlbumTracksJson ) {
+	        	
+	        	var nNumTracks = oDataAlbumTracksJson.items.length;
+	        	var aTracks = oDataAlbumTracksJson.items;
+	        	var sAlbumTracks = "<option value='default'>Please Choose Track...</option>";
+
+	        	for (var i=0; i<nNumTracks; i++) {
+	        		var oCurrentAlbumTracks = aTracks[i];
+	        		console.log(oCurrentAlbumTracks.name)
+	        		sAlbumTracks += "<option value='" + oCurrentAlbumTracks.preview_url +"'>" + oCurrentAlbumTracks.name + "</option>";
+	        	};
+
+	        	$("#tracks").html(sAlbumTracks)
+	        	
+	        	$('#tracks').show("slow");
+			}
+		})
+  		
+	});
+
+	$('#preview').hide();
+
+	$("#tracks").on("change",function(e) {
+
+		var $optionSelected = $(this).find("option:selected");
+  		var sTrackName = $optionSelected.text();
+  		var sTrackPreview = $optionSelected.val()
+
+	  	document.getElementById('preview').innerHTML = "<iframe title='Track preview' type=\'text/html\' width='300' height='150' src=" + sTrackPreview + "></iframe>"
+  		
+  		$('#preview').show("slow");
+	});
+
 	</script>
 </body>
 </html>
